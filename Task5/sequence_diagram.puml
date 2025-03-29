@@ -1,0 +1,34 @@
+@startuml
+participant "MES API" as MES_API
+participant Cache as Cache
+database "MES DB" as MES_DB
+
+group "Read-Through"
+MES_API -> Cache : read  Orders from Cache
+activate Cache
+Cache -> Cache: search Orders in Cache
+activate Cache
+Cache -> MES_DB: read Orders from DB
+activate MES_DB
+MES_DB --> Cache: write Orders to Cache
+deactivate MES_DB
+Cache --> MES_API: return Orders
+deactivate Cache
+end
+
+group "Write-Behind"
+MES_API -> Cache : write Order to Cache
+activate Cache
+Cache --> MES_API : return
+deactivate Cache
+Cache -> MES_DB : write change of Order to DB
+activate MES_DB
+MES_DB --> Cache: return
+deactivate MES_DB
+end
+
+note right Cache
+В кэше будут храниться сущности "Заказ",
+"Привязка заказа к оператору"
+end note
+@enduml
